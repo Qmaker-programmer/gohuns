@@ -177,4 +177,4 @@ Aquí no usamos librerías de 50GB. Solo lo justo y necesario:
 
 ---
 
-Desarrollado con mucho código limpio, insomnio y **mucho Té** por [Qmaker](https://github.com/Qmaker-programmer). 🚩
+Desarrollado con mucho código limpio y **mucho Té** por [Qmaker](https://github.com/Qmaker-programmer). 🚩
