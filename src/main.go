@@ -16,7 +16,6 @@ import (
 	"github.com/fatih/color"
 )
 
-// Estructura para el mapa JSON
 type RegistroIdioma struct {
 	Nombre string `json:"nombre"`
 	UrlAff string `json:"url_aff"`
@@ -26,17 +25,15 @@ type RegistroIdioma struct {
 func obtenerRutasBase() (string, string) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error obteniendo el directorio HOME: %v\n", err)
+		fmt.Fprintf(os.Stderr, "err: no se obtuvo el directorio HOME: %v\n", err)
 		os.Exit(1)
 	}
 	
-	// Carpeta global: ~/.gohuns/lenguajes
 	dirLenguajes := filepath.Join(home, ".gohuns", "lenguajes")
 	rutaJson := filepath.Join(home, ".gohuns", "map.json")
 	
-	// Crear la estructura de carpetas si no existe
 	if err := os.MkdirAll(dirLenguajes, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "Error creando carpetas de configuración: %v\n", err)
+		fmt.Fprintf(os.Stderr, "err: fallo al crear carpetas de configuración: %v\n", err)
 		os.Exit(1)
 	}
 	
@@ -46,7 +43,6 @@ func obtenerRutasBase() (string, string) {
 func guardarEnMapaJson(rutaJson, nombre, urlAff, urlDic string) {
 	var registros []RegistroIdioma
 
-	// Si el archivo ya existe, leer su contenido actual
 	if _, err := os.Stat(rutaJson); err == nil {
 		data, err := os.ReadFile(rutaJson)
 		if err == nil {
@@ -54,7 +50,6 @@ func guardarEnMapaJson(rutaJson, nombre, urlAff, urlDic string) {
 		}
 	}
 
-	// Crear o actualizar el registro
 	nuevoRegistro := RegistroIdioma{Nombre: nombre, UrlAff: urlAff, UrlDic: urlDic}
 	actualizado := false
 	for i, r := range registros {
@@ -68,21 +63,19 @@ func guardarEnMapaJson(rutaJson, nombre, urlAff, urlDic string) {
 		registros = append(registros, nuevoRegistro)
 	}
 
-	// Guardar el JSON con formato legible
 	data, err := json.MarshalIndent(registros, "", "  ")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error codificando JSON: %v\n", err)
+		fmt.Fprintf(os.Stderr, "err: fallo al codificar JSON: %v\n", err)
 		return
 	}
 
 	err = os.WriteFile(rutaJson, data, 0644)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error escribiendo map.json: %v\n", err)
+		fmt.Fprintf(os.Stderr, "err: no se pudo escribir map.json: %v\n", err)
 	}
 }
 
 func descargarYLimpiarAff(url, caminoDestino string) error {
-	fmt.Printf("Descargando y optimizando: %s...\n", filepath.Base(caminoDestino))
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -90,7 +83,7 @@ func descargarYLimpiarAff(url, caminoDestino string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error de servidor: %s", resp.Status)
+		return fmt.Errorf("HTTP %s", resp.Status)
 	}
 
 	out, err := os.Create(caminoDestino)
@@ -117,7 +110,6 @@ func descargarYLimpiarAff(url, caminoDestino string) error {
 }
 
 func descargarDic(url, caminoDestino string) error {
-	fmt.Printf("Descargando: %s...\n", filepath.Base(caminoDestino))
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -125,7 +117,7 @@ func descargarDic(url, caminoDestino string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error de servidor: %s", resp.Status)
+		return fmt.Errorf("HTTP %s", resp.Status)
 	}
 
 	out, err := os.Create(caminoDestino)
@@ -142,6 +134,7 @@ func procesarPalabra(palabra string, speller *gospell.GoSpell) {
 	if speller.Spell(palabra) {
 		fmt.Print(palabra)
 	} else {
+		// Minimalismo puro: imprime en rojo el error tal cual
 		color.Set(color.FgRed, color.Bold)
 		fmt.Print(palabra)
 		color.Unset()
@@ -151,18 +144,60 @@ func procesarPalabra(palabra string, speller *gospell.GoSpell) {
 func main() {
 	dirLenguajes, rutaJson := obtenerRutasBase()
 
-	langPtr := flag.String("l", "es_ES", "Idioma para corregir (ej: es_CL)")
-	downloadPtr := flag.Bool("d", false, "Activa el modo descarga")
-	namePtr := flag.String("n", "", "Nombre personalizado para el idioma a descargar")
+	langPtr := flag.String("l", "es_ES", "Idioma para corregir")
+	downloadPtr := flag.Bool("d", false, "Modo descarga")
+	namePtr := flag.String("n", "", "Nombre del idioma")
+	listPtr := flag.Bool("list", false, "Lista diccionarios disponibles")
+
+	flag.Usage = func() {
+		color.Cyan("🛡️ GOHUNS — Corrector Ortográfico Minimalista CLI\n")
+		fmt.Println("Uso:")
+		fmt.Println("  gohuns -l <idioma> < texto.txt")
+		fmt.Println("  echo \"texto\" | gohuns -l <idioma>\n")
+		fmt.Println("Banderas:")
+		flag.PrintDefaults()
+		fmt.Println("\nEjemplos:")
+		fmt.Println("  gohuns -list")
+		fmt.Println("  gohuns -d -n es_CL <url_aff> <url_dic>")
+	}
 
 	flag.Parse()
+
+	// MODO LISTAR DICCIONARIOS (Ultra minimalista)
+	if *listPtr {
+		if _, err := os.Stat(rutaJson); os.IsNotExist(err) {
+			fmt.Println("cache: vacía (no hay diccionarios en map.json)")
+			return
+		}
+
+		data, err := os.ReadFile(rutaJson)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "err: no se pudo leer el índice: %v\n", err)
+			os.Exit(1)
+		}
+
+		var registros []RegistroIdioma
+		if err := json.Unmarshal(data, &registros); err != nil {
+			fmt.Fprintf(os.Stderr, "err: json corrupto: %v\n", err)
+			os.Exit(1)
+		}
+
+		if len(registros) == 0 {
+			fmt.Println("cache: vacía")
+			return
+		}
+		for _, r := range registros {
+			fmt.Printf("lang: %s\n", color.CyanString(r.Nombre))
+		}
+		return
+	}
 
 	// MODO DESCARGA
 	if *downloadPtr {
 		urls := flag.Args()
 		if *namePtr == "" || len(urls) < 2 {
-			fmt.Fprintln(os.Stderr, "Error: Faltan parámetros para la descarga.")
-			fmt.Fprintln(os.Stderr, "Uso: gohuns -d -n <nombre> <url_aff> <url_dic>")
+			fmt.Fprintln(os.Stderr, "err: faltan parámetros de descarga.")
+			fmt.Fprintln(os.Stderr, "uso: gohuns -d -n <nombre> <url_aff> <url_dic>")
 			os.Exit(1)
 		}
 
@@ -173,30 +208,28 @@ func main() {
 		caminoDic := filepath.Join(dirLenguajes, *namePtr+".dic")
 
 		if err := descargarYLimpiarAff(urlAff, caminoAff); err != nil {
-			fmt.Fprintf(os.Stderr, "Error procesando .aff: %v\n", err)
+			fmt.Fprintf(os.Stderr, "err: aff falló (%v)\n", err)
 			os.Exit(1)
 		}
 		
 		if err := descargarDic(urlDic, caminoDic); err != nil {
-			fmt.Fprintf(os.Stderr, "Error procesando .dic: %v\n", err)
+			fmt.Fprintf(os.Stderr, "err: dic falló (%v)\n", err)
 			os.Exit(1)
 		}
 
-		// Registrar la descarga en el map.json de forma automática
 		guardarEnMapaJson(rutaJson, *namePtr, urlAff, urlDic)
-		
-		fmt.Printf("¡Éxito! Idioma '%s' instalado globalmente en ~/.gohuns/lenguajes/\n", *namePtr)
+		fmt.Printf("ok: '%s' instalado en caché\n", *namePtr)
 		return
 	}
 
-	// MODO CORRECTOR (Global)
+	// MODO CORRECTOR
 	affPath := filepath.Join(dirLenguajes, *langPtr+".aff")
 	dicPath := filepath.Join(dirLenguajes, *langPtr+".dic")
 
 	speller, err := gospell.NewGoSpell(affPath, dicPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: No se encontró el diccionario '%s' en el almacenamiento global.\n", *langPtr)
-		fmt.Fprintf(os.Stderr, "Usa: gohuns -d -n %s <url_aff> <url_dic> para instalarlo.\n", *langPtr)
+		fmt.Fprintf(os.Stderr, "err: falta diccionario '%s'\n", *langPtr)
+		fmt.Fprintf(os.Stderr, "descarga: gohuns -d -n %s <url_aff> <url_dic>\n", *langPtr)
 		os.Exit(1)
 	}
 
