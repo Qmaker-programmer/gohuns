@@ -150,7 +150,7 @@ func main() {
 	listPtr := flag.Bool("list", false, "Lista diccionarios disponibles")
 
 	flag.Usage = func() {
-		color.Cyan("🛡️ GOHUNS — Corrector Ortográfico Minimalista CLI\n")
+		color.Cyan("GOHUNS — Corrector Ortográfico Minimalista CLI\n")
 		fmt.Println("Uso:")
 		fmt.Println("  gohuns -l <idioma> < texto.txt")
 		fmt.Println("  echo \"texto\" | gohuns -l <idioma>\n")
@@ -162,6 +162,15 @@ func main() {
 	}
 
 	flag.Parse()
+
+	// --- NUEVA VALIDACIÓN ---
+	// Si no se pasaron banderas Y la entrada estándar (stdin) es una terminal interactiva (no viene de un pipe o archivo)
+	fi, _ := os.Stdin.Stat()
+	if flag.NFlag() == 0 && (fi.Mode()&os.ModeCharDevice) != 0 {
+		flag.Usage()
+		return
+	}
+	// ------------------------
 
 	// MODO LISTAR DICCIONARIOS (Ultra minimalista)
 	if *listPtr {
