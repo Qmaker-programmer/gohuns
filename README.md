@@ -21,6 +21,7 @@
 
 ## 🚀 Instalación y Empaquetado
 **Si quieres instalarlo facil hazlo de aqui:** [Releases (Binarios listos!)](https://github.com/Qmaker-programmer/gohuns/releases)
+**O si eres hardcore aqui la forma manual: **
 ### Prerrequisitos
 
 * **Go 1.21+** y **Git**. No necesitas nada más.
