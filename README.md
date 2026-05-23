@@ -1,4 +1,4 @@
-# 🛡️ GOHUNS — Corrector Ortográfico CLI & Gestor de Diccionarios
+# GOHUNS — Corrector Ortográfico CLI & Gestor de Diccionarios
 
 > Un corrector ortográfico interactivo, ultrarrápido y **FACHERO** que vive en tu terminal 🖥️  
 > *Porque enviar correos con faltas de ortografía en pleno 2026 es de código espagueti, amigo.*
