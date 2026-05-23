@@ -3,6 +3,10 @@
 > Un corrector interactivo, ultra rápido y **MINIMALISTA AL EXTREMO** que vive en tus pipelines y flujos de terminal 🖥️
 > *Porque ver errores ortográficos en tu CLI debe doler a la vista, directo al grano.*
 
+**Preview**
+
+<img width="712" height="375" alt="image" src="https://github.com/user-attachments/assets/892c4cd9-1b64-4f67-94d9-8a49b78d6033" />
+
 ---
 
 ## Características Clave ⚡
