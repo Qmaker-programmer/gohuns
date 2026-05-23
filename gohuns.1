@@ -1,0 +1,44 @@
+.TH GOHUNS 1 "Mayo 2026" "gohuns 0.0.1" "Manual de Usuario de GoHuns"
+.SH NOMBRE
+gohuns \- Corrector ortográfico estático y minimalista para la CLI
+.SH SINOPSIS
+.B gohuns
+[\-l idioma] < archivo.txt
+.br
+.B echo
+"texto" |
+.B gohuns
+[\-l idioma]
+.br
+.B gohuns
+\-list
+.br
+.B gohuns
+\-d \-n nombre <url_aff> <url_dic>
+.SH DESCRIPCIÓN
+.B gohuns
+es un corrector interactivo de alto rendimiento escrito en Go que procesa flujos de texto (streams) a través de la entrada estándar (stdin). Resalta los errores ortográficos en rojo brillante directamente en la salida estándar (stdout).
+.SH OPCIONES
+.TP
+.B \-l \fIidioma\fR
+Especifica el diccionario a usar (por defecto "es_ES"). El archivo debe existir en ~/.gohuns/lenguajes/.
+.TP
+.B \-list
+Lista de manera compacta todos los diccionarios disponibles en el sistema.
+.TP
+.B \-d
+Activa el modo descarga. Requiere las URLs de los archivos .aff y .dic al final.
+.TP
+.B \-n \fInombre\fR
+Asigna un nombre o identificador personalizado (ej. es_CL) al idioma que se va a descargar.
+.SH ARCHIVOS
+.I ~/.gohuns/lenguajes/
+.RS
+Carpeta donde se almacenan los archivos .aff y .dic descargados.
+.RE
+.I ~/.gohuns/map.json
+.RS
+Índice de los lenguajes instalados en caché.
+.RE
+.SH AUTOR
+Desarrollado de forma limpia por Qmaker. (https://github.com/Qmaker-programmer/gohuns)

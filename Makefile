@@ -1,11 +1,12 @@
-# Nombre del ejecutable base
+# Nombre del ejecutable base y versión
 BINARY_NAME=gohuns
+VERSION=0.0.2
 
 # Rutas de origen y destino
 SRC=src/main.go
 BIN_DIR=bin
 
-.PHONY: all run build build-all clean
+.PHONY: all run build clean all-debs
 
 run:
 	go run $(SRC)
@@ -13,10 +14,10 @@ run:
 build:
 	go build -ldflags="-s -w" -o $(BIN_DIR)/$(BINARY_NAME) $(SRC)
 
-# Compilación cruzada total (6 binarios: Windows, Linux y macOS en amd64 y arm64)
+# Compilación cruzada total (6 binarios limpios en /bin)
 all: clean
 	@mkdir -p $(BIN_DIR)
-	@echo "🚀 Iniciando compilación multiplataforma..."
+	@echo "🚀 Iniciando compilación multiplataforma (v$(VERSION))..."
 	
 	@echo "🐧 Compilando para Linux (amd64)..."
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o $(BIN_DIR)/$(BINARY_NAME)-linux-amd64 $(SRC)
@@ -38,5 +39,32 @@ all: clean
 	
 	@echo "✨ ¡Los 6 binarios estáticos listos en la carpeta /$(BIN_DIR)!"
 
-clean:
-	rm -rf $(BIN_DIR)
+# Automatiza los .deb guardándolos en /bin y sincronizando la versión automáticamente (en control y manpage)
+all-debs: all
+	@# Validación inteligente del entorno
+	@if [ -z "$$(which dpkg-deb 2>/dev/null)" ]; then \
+		echo "❌ Error: 'dpkg-deb' no está instalado. No se pueden crear paquetes .deb en este sistema."; \
+		exit 1; \
+	fi
+	
+	@echo "📦 Generando instaladores .deb para Linux (v$(VERSION))..."
+	
+	@# --- PAQUETE AMD64 ---
+	@echo "  -> Estructurando debian_build_amd64..."
+	@mkdir -p debian_build_amd64/DEBIAN
+	@mkdir -p debian_build_amd64/usr/bin
+	@mkdir -p debian_build_amd64/usr/share/man/man1
+	@cp $(BIN_DIR)/$(BINARY_NAME)-linux-amd64 debian_build_amd64/usr/bin/$(BINARY_NAME)
+	@# Modifica la versión dentro del manual sobre la marcha usando sed
+	@if [ -f gohuns.1 ]; then \
+		sed 's/gohuns [0-9]\+\.[0-9]\+\.[0-9]\+/gohuns $(VERSION)/g' gohuns.1 > debian_build_amd64/usr/share/man/man1/gohuns.1; \
+	fi
+	@echo "Package: $(BINARY_NAME)" > debian_build_amd64/DEBIAN/control
+	@echo "Version: $(VERSION)" >> debian_build_amd64/DEBIAN/control
+	@echo "Section: utils" >> debian_build_amd64/DEBIAN/control
+	@echo "Priority: optional" >> debian_build_amd64/DEBIAN/control
+	@echo "Architecture: amd64" >> debian_build_amd64/DEBIAN/control
+	@echo "Maintainer: Qmaker" >> debian_build_amd64/DEBIAN/control
+	@echo "Description: Corrector Ortografico Minimalista CLI" >> debian_build_amd64/DEBIAN/control
+	@echo " Un corrector estatico, ultra rapido y minimalista para la CLI." >> debian_build_amd64/DEBIAN/control
+	@dpkg-deb --build debian_build_amd6

@@ -1,2 +1,19 @@
+# --- Binarios y Compilación ---
 bin/
-go.sum
+debian_build/
+debian_build_amd64/
+debian_build_arm64/
+*.deb
+*.exe
+
+# --- Entorno de Go ---
+# Opcional: Descomenta go.sum si prefieres no trackearlo, 
+# aunque en herramientas CLI se suele subir para asegurar versiones fijas.
+# go.sum
+
+# --- Archivos del Sistema y Editores ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.micro/
