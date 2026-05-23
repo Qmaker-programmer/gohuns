@@ -107,6 +107,7 @@ gohuns -help
 │   ├── gohuns-darwin-amd64
 │   ├── gohuns-darwin-arm64
 │   ├── gohuns-linux-arm64
+│   ├── gohuns-linux-amd64
 │   ├── gohuns-windows-amd64.exe
 │   └── gohuns-windows-arm64.exe
 ├── examples/
@@ -115,7 +116,6 @@ gohuns -help
 ├── Makefile                    # Multi-compilador rápido
 └── src/
     └── main.go                 # TODO el código fuente (un solo archivo, sin vueltas)
-
 ```
 
 ---
